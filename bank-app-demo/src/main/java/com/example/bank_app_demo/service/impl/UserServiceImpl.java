@@ -16,6 +16,10 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     EmailService emailService;
+
+    @Autowired
+    TransactionService transactionService;
+
     @Override
     public BankResponse createAccount(UserRequestDTO userRequestDTO) {
         //Creating an account - saving to the database
@@ -154,5 +158,73 @@ public class UserServiceImpl implements UserService {
                         .accountName(userToDebit.getFirstName() + " " + userToDebit.getLastName())
                         .build())
                 .build();
+    }
+
+    @Override
+    public BankResponse transfer(TransferRequest request) {
+        boolean sourceAccountExists = userRepository.existsByAccountNumber(request.getSourceAccountNumber());
+        boolean destinationAccountExists = userRepository.existsByAccountNumber(request.getDestinationAccountNumber());
+        if(!sourceAccountExists || !destinationAccountExists){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        User sourceUser = userRepository.findByAccountNumber(request.getSourceAccountNumber());
+        User destinationUser = userRepository.findByAccountNumber(request.getDestinationAccountNumber());
+        if(sourceUser.getAccountBalance().compareTo(request.getAmount()) < 0){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_DEBITED)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_DEBITED_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        BigDecimal newSourceBalance = sourceUser.getAccountBalance().subtract(request.getAmount());
+        BigDecimal newDestinationBalance = destinationUser.getAccountBalance().add(request.getAmount());
+        sourceUser.setAccountBalance(newSourceBalance);
+        destinationUser.setAccountBalance(newDestinationBalance);
+        userRepository.save(sourceUser);
+
+        TransactionDTO transactionDTO = TransactionDTO.builder()
+                .transactionType("CREDIT")
+                .amount(request.getAmount())
+                .accountNumber(destinationUser.getAccountNumber())
+                .build();
+
+        EmailDetails debitAlert = EmailDetails.builder()
+                        .subject("Debit Alert")
+                        .recipient(sourceUser.getEmail())
+                        .messageBody("Dear " + sourceUser.getFirstName() + " " + sourceUser.getLastName() + ", your account has been debited with " + request.getAmount() + ". Your new balance is " + newSourceBalance)
+                        .build();
+        emailService.sendEmailAlert(debitAlert);
+        userRepository.save(destinationUser);
+
+        TransactionDTO transactionDTO2 = TransactionDTO.builder()
+                .transactionType("CREDIT")
+                .amount(request.getAmount())
+                .accountNumber(destinationUser.getAccountNumber())
+                .build();
+
+        EmailDetails creditAlert = EmailDetails.builder()
+                .subject("Credit Alert")
+                .recipient(destinationUser.getEmail())
+                .messageBody("Dear " + destinationUser.getFirstName() + " " + destinationUser.getLastName() + ", your account has been credited with " + request.getAmount() + ". Your new balance is " + newDestinationBalance)
+                .build();
+        emailService.sendEmailAlert(creditAlert);
+        transactionService.saveTransaction(transactionDTO);
+        transactionService.saveTransaction(transactionDTO2);
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_TRANSFER_SUCCESS)
+                .responseMessage(AccountUtils.ACCOUNT_TRANSFER_SUCCESS_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(newSourceBalance)
+                        .accountNumber(sourceUser.getAccountNumber())
+                        .accountName(sourceUser.getFirstName() + " " + sourceUser.getLastName())
+                        .build())
+                .build();
+
     }
 }

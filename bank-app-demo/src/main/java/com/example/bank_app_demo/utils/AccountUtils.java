@@ -17,6 +17,9 @@ public class AccountUtils {
     public static final String ACCOUNT_NOT_DEBITED_MESSAGE = "Insufficient funds to debit";
     public static final String ACCOUNT_DEBITED_SUCCESS = "007";
     public static final String ACCOUNT_DEBITED_SUCCESS_MESSAGE = "User Account DEBITED";
+    public static final String ACCOUNT_TRANSFER_SUCCESS = "008";
+    public static final String ACCOUNT_TRANSFER_SUCCESS_MESSAGE = "User Account Transfer Successful";
+
 
 
     public static String generateAccountNumber() {
