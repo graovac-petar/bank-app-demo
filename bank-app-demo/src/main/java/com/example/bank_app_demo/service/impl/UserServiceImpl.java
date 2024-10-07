@@ -116,6 +116,14 @@ public class UserServiceImpl implements UserService {
         userToCredit.setAccountBalance(newBalance);
         userRepository.save(userToCredit);
 
+        TransactionDTO transactionDTO = TransactionDTO.builder()
+                .transactionType("CREDIT")
+                .amount(creditDebitRequest.getAmount())
+                .accountNumber(userToCredit.getAccountNumber())
+                .build();
+
+        transactionService.saveTransaction(transactionDTO);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE)
@@ -149,6 +157,15 @@ public class UserServiceImpl implements UserService {
         BigDecimal newBalance = userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount());
         userToDebit.setAccountBalance(newBalance);
         userRepository.save(userToDebit);
+
+        TransactionDTO transactionDTO = TransactionDTO.builder()
+                .transactionType("DEBIT")
+                .amount(creditDebitRequest.getAmount())
+                .accountNumber(userToDebit.getAccountNumber())
+                .build();
+
+        transactionService.saveTransaction(transactionDTO);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_DEBITED_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_DEBITED_SUCCESS_MESSAGE)
@@ -189,7 +206,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(sourceUser);
 
         TransactionDTO transactionDTO = TransactionDTO.builder()
-                .transactionType("CREDIT")
+                .transactionType("DEBIT")
                 .amount(request.getAmount())
                 .accountNumber(destinationUser.getAccountNumber())
                 .build();

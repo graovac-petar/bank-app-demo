@@ -4,5 +4,5 @@ import com.example.bank_app_demo.dto.EmailDetails;
 
 public interface EmailService {
     void sendEmailAlert(EmailDetails emailDetails);
-
+    void sendEmailWithAttachment(EmailDetails emailDetails);
 }
