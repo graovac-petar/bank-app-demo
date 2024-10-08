@@ -1,6 +1,6 @@
 # Bank App Demo
 
-A simple bank application demonstrating basic banking operations like account creation, deposits, withdrawals, and balance inquiries.
+A simple bank application demonstrating basic banking operations like account creation, deposits, withdrawals, and balance inquiries with email and PDF generating.
 
 ## Features
 
@@ -9,7 +9,8 @@ A simple bank application demonstrating basic banking operations like account cr
 - **Withdraw Funds (Debit)**: Withdraw money from your account, with checks for sufficient balance.
 - **Balance Inquiry**: Check the current balance of your account.
 - **Transaction History**: View a history of all transactions made.
-- **Email creation and transaction history**: Email about creation of account and transaction history
+- **Email creation and transaction history**: Email about creation of account and transaction history.
+- **PDF Generating**: Generate PDF
 
 ## Technologies Used
 
